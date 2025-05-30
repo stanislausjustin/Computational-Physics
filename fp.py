@@ -14,7 +14,7 @@ NUM_PARTICLES = 50
 MIN_SPEED = 1
 MAX_SPEED = 5
 TEMPERATURE_FACTOR = 0.5
-WALL_THICKNESS = 2
+WALL_THICKNESS = 4
 PARTICLE_MASS = 1.0
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
@@ -26,10 +26,14 @@ LIGHT_YELLOW = (255, 255, 200)
 LIGHT_RED = (255, 200, 200)
 DARK_YELLOW = (200, 200, 0)
 DARK_RED = (200, 0, 0)
+CONTAINER_COLOR = (200, 200, 220)
+CONTAINER_BORDER = (100, 100, 120)
+CONTAINER_SHADOW = (180, 180, 200)
 BUTTON_WIDTH = 50
 BUTTON_HEIGHT = 50
 BUTTON_MARGIN = 20
 BUTTON_RADIUS = 10
+CONTAINER_SHADOW_SIZE = 5
 
 class Button:
     def __init__(self, x: int, y: int, width: int, height: int, text: str, color: Tuple[int, int, int], hover_color: Tuple[int, int, int], dark_color: Tuple[int, int, int], label: str = ""):
@@ -146,6 +150,10 @@ class GasSimulator:
         self.window_width = WINDOW_WIDTH
         self.window_height = WINDOW_HEIGHT
         self.box_scale = 0.8
+        self.pressure_unit = "Pa"
+        self.speed_unit = "m/s"
+        self.energy_unit = "J"
+        self.temp_unit = "K"
         
         self.update_button_positions()
         self.initialize_particles()
@@ -283,24 +291,42 @@ class GasSimulator:
                     other.y += overlap * math.sin(angle) / 2
 
     def draw(self):
-        self.screen.fill(BLACK)
+        self.screen.fill(WHITE)  # White background
         
-        #box dimensions
+        # Get box dimensions
         box_width, box_height, box_x, box_y = self.get_box_dimensions()
         
-        'box'
-        for i in range(3):
-            glow_rect = pygame.Rect(
-                box_x - i, box_y - i,
-                box_width + 2*i, box_height + 2*i
-            )
-            glow_color = (GRAY[0]//2, GRAY[1]//2, GRAY[2]//2)
-            pygame.draw.rect(self.screen, glow_color, glow_rect, WALL_THICKNESS)
-
-        pygame.draw.rect(self.screen, GRAY, 
-                        (box_x, box_y, box_width, box_height), WALL_THICKNESS)
+        # Draw container shadow
+        shadow_rect = pygame.Rect(
+            box_x + CONTAINER_SHADOW_SIZE,
+            box_y + CONTAINER_SHADOW_SIZE,
+            box_width,
+            box_height
+        )
+        pygame.draw.rect(self.screen, CONTAINER_SHADOW, shadow_rect, border_radius=10)
         
-        'particles'
+        # Draw container with gradient effect
+        for i in range(WALL_THICKNESS):
+            # Draw outer border
+            border_rect = pygame.Rect(
+                box_x - i,
+                box_y - i,
+                box_width + 2*i,
+                box_height + 2*i
+            )
+            # Create gradient effect by varying the color
+            gradient_factor = 1 - (i / WALL_THICKNESS) * 0.3
+            border_color = (
+                int(CONTAINER_BORDER[0] * gradient_factor),
+                int(CONTAINER_BORDER[1] * gradient_factor),
+                int(CONTAINER_BORDER[2] * gradient_factor)
+            )
+            pygame.draw.rect(self.screen, border_color, border_rect, 1, border_radius=10)
+        
+        # Draw the container
+        container_rect = pygame.Rect(box_x, box_y, box_width, box_height)
+        pygame.draw.rect(self.screen, CONTAINER_COLOR, container_rect, border_radius=10)
+        
         for particle in self.particles:
             for i in range(3):
                 glow_radius = PARTICLE_RADIUS + i
@@ -308,13 +334,9 @@ class GasSimulator:
                 pygame.draw.circle(self.screen, glow_color,
                                  (int(particle.x), int(particle.y)), glow_radius)
             
+            # Draw the particles
             pygame.draw.circle(self.screen, BLUE, 
                              (int(particle.x), int(particle.y)), PARTICLE_RADIUS)
-        
-        #stats
-        stats_surface = pygame.Surface((300, 200), pygame.SRCALPHA)
-        stats_surface.fill((0, 0, 0, 128))  
-        self.screen.blit(stats_surface, (5, 5))
         
         avg_speed = self.calculate_average_speed()
         pressure = self.calculate_pressure()
@@ -322,15 +344,15 @@ class GasSimulator:
         total_ke = self.calculate_total_ke()
         
         stats = [
-            f"Average Speed: {avg_speed:.2f}",
-            f"Temperature: {self.temperature:.2f}",
-            f"Pressure: {pressure:.2f}",
-            f"Avg KE: {avg_ke:.2f}",
-            f"Total KE: {total_ke:.2f}"
+            f"Average Speed: {avg_speed:.2f} {self.speed_unit}",
+            f"Temperature: {self.temperature:.2f} {self.temp_unit}",
+            f"Pressure: {pressure:.2f} {self.pressure_unit}",
+            f"Avg KE: {int(avg_ke)} {self.energy_unit}",
+            f"Total KE: {int(total_ke)} {self.energy_unit}"
         ]
         
         for i, text in enumerate(stats):
-            surface = self.font.render(text, True, WHITE)
+            surface = self.font.render(text, True, BLACK)
             self.screen.blit(surface, (10, 10 + i * 40))
         
         #buttons
