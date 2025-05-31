@@ -84,7 +84,7 @@ class Button:
             screen.blit(text_surface, text_rect)
         
         if self.label:
-            label_surface = self.label_font.render(self.label, True, WHITE)
+            label_surface = self.label_font.render(self.label, True, BLACK)
             label_rect = label_surface.get_rect(centerx=self.rect.centerx, top=self.rect.bottom + 5)
             screen.blit(label_surface, label_rect)
 
@@ -143,7 +143,7 @@ class GasSimulator:
         pygame.display.set_caption("Kinetic Gas Simulator")
         self.clock = pygame.time.Clock()
         self.particles: List[Particle] = []
-        self.temperature = 1.0
+        self.temperature = 1.0  
         self.collisions = 0
         self.pressure_history: List[int] = []
         self.font = pygame.font.Font(None, 36)
@@ -153,7 +153,7 @@ class GasSimulator:
         self.pressure_unit = "Pa"
         self.speed_unit = "m/s"
         self.energy_unit = "J"
-        self.temp_unit = "K"
+        self.temp_unit = "T"  
         
         self.update_button_positions()
         self.initialize_particles()
@@ -164,17 +164,17 @@ class GasSimulator:
         
         temp_x = self.window_width - right_margin - BUTTON_WIDTH
         self.temp_up = Button(temp_x, 50, BUTTON_WIDTH, BUTTON_HEIGHT, "↑", 
-                            YELLOW, LIGHT_YELLOW, DARK_YELLOW, "Temp +")
+                            YELLOW, LIGHT_YELLOW, DARK_YELLOW, "")
         self.temp_down = Button(temp_x, 50 + BUTTON_HEIGHT + BUTTON_MARGIN, 
                               BUTTON_WIDTH, BUTTON_HEIGHT, "↓", 
-                              YELLOW, LIGHT_YELLOW, DARK_YELLOW, "Temp -")
+                              YELLOW, LIGHT_YELLOW, DARK_YELLOW, "Temp")
         
         box_x = temp_x - button_spacing - BUTTON_WIDTH
         self.box_increase = Button(box_x, 50, BUTTON_WIDTH, BUTTON_HEIGHT, "+", 
-                                 RED, LIGHT_RED, DARK_RED, "Size +")
+                                 RED, LIGHT_RED, DARK_RED, "")
         self.box_decrease = Button(box_x, 50 + BUTTON_HEIGHT + BUTTON_MARGIN, 
                                  BUTTON_WIDTH, BUTTON_HEIGHT, "-", 
-                                 RED, LIGHT_RED, DARK_RED, "Size -")
+                                 RED, LIGHT_RED, DARK_RED, "Size")
 
     def handle_resize(self, new_width: int, new_height: int):
         self.window_width = new_width
@@ -213,7 +213,7 @@ class GasSimulator:
 
     def adjust_box_size(self, change: float):
         old_scale = self.box_scale
-        self.box_scale = max(0.3, min(0.9, self.box_scale + change/1000))  # Adjust scale factor
+        self.box_scale = max(0.3, min(0.9, self.box_scale + change/1000))  
         
         old_width, old_height, old_x, old_y = self.get_box_dimensions()
         new_width, new_height, new_x, new_y = self.get_box_dimensions()
@@ -291,12 +291,10 @@ class GasSimulator:
                     other.y += overlap * math.sin(angle) / 2
 
     def draw(self):
-        self.screen.fill(WHITE)  # White background
+        self.screen.fill(WHITE)  
         
-        # Get box dimensions
         box_width, box_height, box_x, box_y = self.get_box_dimensions()
         
-        # Draw container shadow
         shadow_rect = pygame.Rect(
             box_x + CONTAINER_SHADOW_SIZE,
             box_y + CONTAINER_SHADOW_SIZE,
@@ -305,16 +303,13 @@ class GasSimulator:
         )
         pygame.draw.rect(self.screen, CONTAINER_SHADOW, shadow_rect, border_radius=10)
         
-        # Draw container with gradient effect
         for i in range(WALL_THICKNESS):
-            # Draw outer border
             border_rect = pygame.Rect(
                 box_x - i,
                 box_y - i,
                 box_width + 2*i,
                 box_height + 2*i
             )
-            # Create gradient effect by varying the color
             gradient_factor = 1 - (i / WALL_THICKNESS) * 0.3
             border_color = (
                 int(CONTAINER_BORDER[0] * gradient_factor),
@@ -323,7 +318,6 @@ class GasSimulator:
             )
             pygame.draw.rect(self.screen, border_color, border_rect, 1, border_radius=10)
         
-        # Draw the container
         container_rect = pygame.Rect(box_x, box_y, box_width, box_height)
         pygame.draw.rect(self.screen, CONTAINER_COLOR, container_rect, border_radius=10)
         
@@ -334,7 +328,6 @@ class GasSimulator:
                 pygame.draw.circle(self.screen, glow_color,
                                  (int(particle.x), int(particle.y)), glow_radius)
             
-            # Draw the particles
             pygame.draw.circle(self.screen, BLUE, 
                              (int(particle.x), int(particle.y)), PARTICLE_RADIUS)
         
@@ -345,7 +338,7 @@ class GasSimulator:
         
         stats = [
             f"Average Speed: {avg_speed:.2f} {self.speed_unit}",
-            f"Temperature: {self.temperature:.2f} {self.temp_unit}",
+            f"Temperature: {self.temperature:.2f} {self.temp_unit} (×{self.temperature:.1f})",
             f"Pressure: {pressure:.2f} {self.pressure_unit}",
             f"Avg KE: {int(avg_ke)} {self.energy_unit}",
             f"Total KE: {int(total_ke)} {self.energy_unit}"
@@ -355,7 +348,7 @@ class GasSimulator:
             surface = self.font.render(text, True, BLACK)
             self.screen.blit(surface, (10, 10 + i * 40))
         
-        #buttons
+        # Draw buttons
         self.temp_up.draw(self.screen)
         self.temp_down.draw(self.screen)
         self.box_increase.draw(self.screen)
